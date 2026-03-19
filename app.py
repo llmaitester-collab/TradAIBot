@@ -5,7 +5,16 @@ from dotenv import load_dotenv
 
 load_dotenv()  # load .env if present
 
-API_KEY = os.getenv("MISTRAL_API_KEY")
+# Prefer Streamlit secrets (Streamlit Cloud) but fall back to environment variables.
+API_KEY = None
+try:
+    API_KEY = st.secrets.get("MISTRAL_API_KEY")
+except Exception:
+    API_KEY = None
+
+if not API_KEY:
+    API_KEY = os.getenv("MISTRAL_API_KEY")
+
 MODEL = "mistral-large"
 APP_VERSION = "0.2"
 
@@ -117,6 +126,13 @@ if submit:
         with st.spinner("Asking Mistral..."):
             try:
                 st.session_state.trade_output = call_mistral(prompt, max_tokens=max_tokens)
+            except requests.HTTPError as http_exc:
+                if http_exc.response is not None and http_exc.response.status_code == 401:
+                    st.session_state.errors.append(
+                        "Request failed: Unauthorized (401). Please verify your MISTRAL_API_KEY in Streamlit Secrets or environment variables."
+                    )
+                else:
+                    st.session_state.errors.append(f"Request failed: {http_exc}")
             except Exception as exc:
                 st.session_state.errors.append(f"Request failed: {exc}")
 
