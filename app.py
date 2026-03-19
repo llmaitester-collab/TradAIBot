@@ -12,11 +12,22 @@ st.set_page_config(page_title="Trading AI Bot", layout="wide")
 
 st.title("Trading AI Bot (Mistral Large)")
 
+# If the API key isn't available, we keep the UI visible and show a clear warning.
 if not API_KEY:
-    st.error(
-        "MISTRAL_API_KEY is not set.\n\n" 
-        "Create a `.env` file with `MISTRAL_API_KEY=your_key` or set the environment variable.")
-    st.stop()
+    st.warning(
+        "**MISTRAL_API_KEY is not set.**\n\n"
+        "Set the environment variable or add it to Streamlit Secrets (recommended)."
+    )
+
+    with st.expander("How to set Mistral API key"):
+        st.markdown(
+            """
+            - Locally: create a file named `.env` with `MISTRAL_API_KEY=your_key`.
+            - Streamlit Cloud: go to **Settings → Secrets** and add `MISTRAL_API_KEY`.
+            """
+        )
+
+    st.info("The app UI remains available, but model generation will not work without a key.")
 
 st.markdown(
     """
@@ -42,22 +53,31 @@ with st.sidebar:
 
 st.subheader("Trade Idea")
 
-if st.button("Generate Trade Insight"):
-    prompt = (
-        f"Symbol: {symbol}\n"
-        f"Timeframe: {timeframe}\n"
-        f"Context: {context}\n"
-        "Provide a concise trading idea with reasoning, an actionable recommendation,"
-        " and suggested risk management parameters."
-    )
+# Use session state to keep the last response visible across reruns
+if "trade_output" not in st.session_state:
+    st.session_state.trade_output = None
 
-    with st.spinner("Asking Mistral..."):
-        try:
-            output = call_mistral(prompt, max_tokens=max_tokens)
-            st.markdown("**Mistral response:**")
-            st.code(output.strip())
-        except Exception as exc:
-            st.error(f"Request failed: {exc}")
+if st.button("Generate Trade Insight"):
+    if not API_KEY:
+        st.error("Cannot generate a trade idea without a valid MISTRAL_API_KEY.")
+    else:
+        prompt = (
+            f"Symbol: {symbol}\n"
+            f"Timeframe: {timeframe}\n"
+            f"Context: {context}\n"
+            "Provide a concise trading idea with reasoning, an actionable recommendation,"
+            " and suggested risk management parameters."
+        )
+
+        with st.spinner("Asking Mistral..."):
+            try:
+                st.session_state.trade_output = call_mistral(prompt, max_tokens=max_tokens)
+            except Exception as exc:
+                st.error(f"Request failed: {exc}")
+
+if st.session_state.trade_output:
+    st.markdown("**Mistral response:**")
+    st.code(st.session_state.trade_output.strip())
 
 
 def call_mistral(prompt: str, max_tokens: int = 300) -> str:

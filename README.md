@@ -28,6 +28,17 @@ Alternatively, create a `.env` file at the repo root containing:
 MISTRAL_API_KEY=eHPEqOB8AHtV5SHAXJNM8ZxWOWVqVVkJ
 ```
 
+### 🛰️ Streamlit Cloud / Streamlit Community Deployment
+If you deploy this app to Streamlit Cloud, add the key as a secret:
+
+1. Open your Streamlit app settings.
+2. Go to **Secrets**.
+3. Add:
+
+```
+MISTRAL_API_KEY = "eHPEqOB8AHtV5SHAXJNM8ZxWOWVqVVkJ"
+```
+
 ## ▶️ Run the app
 
 ```powershell
