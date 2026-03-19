@@ -9,12 +9,44 @@ API_KEY = os.getenv("MISTRAL_API_KEY")
 MODEL = "mistral-large"
 APP_VERSION = "0.2"
 
+
+def call_mistral(prompt: str, max_tokens: int = 300) -> str:
+    """Call Mistral API (mistral-large) to generate text."""
+    url = f"https://api.mistral.ai/v1/models/{MODEL}/generate"
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": max_tokens,
+            "temperature": 0.55,
+            "top_p": 0.9,
+        },
+    }
+
+    resp = requests.post(url, headers=headers, json=payload, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+
+    # The Mistral API typically returns a dict with `results` where each item has `output`.
+    if isinstance(data, dict) and "results" in data and data["results"]:
+        result = data["results"][0]
+        if isinstance(result, dict):
+            return result.get("output", str(result))
+        return str(result)
+
+    # Fallback: return full JSON
+    return str(data)
+
+
 st.set_page_config(page_title="Trading AI Bot", layout="wide")
 
 st.title("Trading AI Bot (Mistral Large)")
 st.caption(f"Version: {APP_VERSION}")
 
-# If the API key isn't available, we keep the UI visible and show a clear warning.
+# Helper to avoid repeated warning spam when key is missing
 if not API_KEY:
     st.warning(
         "**MISTRAL_API_KEY is not set.**\n\n"
@@ -91,34 +123,3 @@ if submit:
 if st.session_state.trade_output:
     st.markdown("**Mistral response:**")
     st.code(st.session_state.trade_output.strip())
-
-
-def call_mistral(prompt: str, max_tokens: int = 300) -> str:
-    """Call Mistral API (mistral-large) to generate text."""
-    url = f"https://api.mistral.ai/v1/models/{MODEL}/generate"
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": max_tokens,
-            "temperature": 0.55,
-            "top_p": 0.9,
-        },
-    }
-
-    resp = requests.post(url, headers=headers, json=payload, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-
-    # The Mistral API typically returns a dict with `results` where each item has `output`.
-    if isinstance(data, dict) and "results" in data and data["results"]:
-        result = data["results"][0]
-        if isinstance(result, dict):
-            return result.get("output", str(result))
-        return str(result)
-
-    # Fallback: return full JSON
-    return str(data)
