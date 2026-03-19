@@ -37,7 +37,14 @@ st.markdown(
     """
 )
 
-with st.sidebar:
+# Use session state to keep the last response visible across reruns
+if "trade_output" not in st.session_state:
+    st.session_state.trade_output = None
+
+if "errors" not in st.session_state:
+    st.session_state.errors = []
+
+with st.sidebar.form("trade_form"):
     st.header("Inputs")
     symbol = st.text_input("Ticker / Symbol", value="AAPL")
     timeframe = st.selectbox("Timeframe", ["1d", "1h", "4h", "1w"], index=0)
@@ -51,15 +58,19 @@ with st.sidebar:
     )
     max_tokens = st.slider("Max tokens", min_value=100, max_value=800, value=300)
 
+    submit = st.form_submit_button("Generate Trade Insight")
+
 st.subheader("Trade Idea")
 
-# Use session state to keep the last response visible across reruns
-if "trade_output" not in st.session_state:
-    st.session_state.trade_output = None
+# Keep last errors visible too (so UI doesn't appear to disappear)
+if st.session_state.errors:
+    for err in st.session_state.errors:
+        st.error(err)
 
-if st.button("Generate Trade Insight"):
+if submit:
+    st.session_state.errors = []
     if not API_KEY:
-        st.error("Cannot generate a trade idea without a valid MISTRAL_API_KEY.")
+        st.session_state.errors.append("Cannot generate a trade idea without a valid MISTRAL_API_KEY.")
     else:
         prompt = (
             f"Symbol: {symbol}\n"
@@ -73,7 +84,7 @@ if st.button("Generate Trade Insight"):
             try:
                 st.session_state.trade_output = call_mistral(prompt, max_tokens=max_tokens)
             except Exception as exc:
-                st.error(f"Request failed: {exc}")
+                st.session_state.errors.append(f"Request failed: {exc}")
 
 if st.session_state.trade_output:
     st.markdown("**Mistral response:**")
