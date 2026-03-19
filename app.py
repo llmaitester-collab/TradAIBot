@@ -7,10 +7,12 @@ load_dotenv()  # load .env if present
 
 API_KEY = os.getenv("MISTRAL_API_KEY")
 MODEL = "mistral-large"
+APP_VERSION = "0.2"
 
 st.set_page_config(page_title="Trading AI Bot", layout="wide")
 
 st.title("Trading AI Bot (Mistral Large)")
+st.caption(f"Version: {APP_VERSION}")
 
 # If the API key isn't available, we keep the UI visible and show a clear warning.
 if not API_KEY:
