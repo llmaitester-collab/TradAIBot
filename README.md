@@ -19,13 +19,13 @@ pip install -r requirements.txt
 3) Set your API key (do not commit this key to version control):
 
 ```powershell
-setx MISTRAL_API_KEY "8emQAiB02FUElyIhveyQOm9uGXQtwquG"
+setx MISTRAL_API_KEY "pInZWCMLPJaABBnfrTwXsufHz1oqs0X5"
 ```
 
 Alternatively, create a `.env` file at the repo root containing:
 
 ```
-MISTRAL_API_KEY=8emQAiB02FUElyIhveyQOm9uGXQtwquG
+MISTRAL_API_KEY=pInZWCMLPJaABBnfrTwXsufHz1oqs0X5
 ```
 
 ### 🛰️ Streamlit Cloud / Streamlit Community Deployment
